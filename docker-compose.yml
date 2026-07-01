@@ -1,0 +1,55 @@
+name: pauper-cube
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: cube-budget-optimizer:dev
+    restart: "no"
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      - CUBE_CONFIG=/app/config/default.yaml
+      - CUBE_DB_PATH=/app/data/db/cube_budget.sqlite
+      - CUBE_REPORTS_DIR=/app/reports
+      - CUBE_LOG_LEVEL=${CUBE_LOG_LEVEL:-INFO}
+      - CUBE_HEADLESS=${CUBE_HEADLESS:-true}
+    volumes:
+      - ./src:/app/src
+      - ./data/db:/app/data/db
+      - ./data/cache:/app/data/cache
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - ./data/input:/app/data/input
+    stdin_open: true
+    tty: true
+
+  app-dev:
+    profiles:
+      - dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: cube-budget-optimizer:dev
+    restart: "no"
+    working_dir: /app
+    env_file:
+      - .env
+    environment:
+      - CUBE_DEBUG=true
+      - CUBE_CONFIG=/app/config/default.yaml
+      - CUBE_LOG_LEVEL=DEBUG
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./data/db:/app/data/db
+      - ./data/cache:/app/data/cache
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - ./data/input:/app/data/input
+    stdin_open: true
+    tty: true

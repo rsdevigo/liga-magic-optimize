@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.tox/
+.nox/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.uv/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Database & generated data
+data/db/*.sqlite
+data/db/*.sqlite-*
+data/db/backups/
+data/db/*
+!data/db/.gitkeep
+data/cache/*
+!data/cache/.gitkeep
+
+# Logs & reports
+logs/*
+!logs/.gitkeep
+reports/*
+!reports/.gitkeep
+
+# Playwright
+.playwright/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# PyInstaller
+*.spec
+*.manifest
+
+# Docker (local overrides)
+docker-compose.override.yml
+docker-compose.override.yaml

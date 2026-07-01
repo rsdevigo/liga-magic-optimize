@@ -1,0 +1,31 @@
+# Sample Pauper Cube card list
+Lightning Bolt
+Counterspell
+Brainstorm
+Ponder
+Preordain
+Serum Visions
+Gitaxian Probe
+Delver of Secrets
+Young Pyromancer
+Monastery Swiftspear
+Lightning Strike
+Lava Spike
+Rift Bolt
+Chain Lightning
+Fireblast
+Goblin Guide
+Monstrous Rage
+Mutagenic Growth
+Apostle's Blessing
+Gut Shot
+Dismember
+Vapor Snag
+Spell Pierce
+Dispel
+Negate
+Essence Scatter
+Annul
+Hydroblast
+Pyroblast
+Red Elemental Blast

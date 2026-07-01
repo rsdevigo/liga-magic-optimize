@@ -1,0 +1,35 @@
+{
+  "name": "Cube Budget Optimizer",
+  "dockerComposeFile": "../docker-compose.yml",
+  "dockerComposeProfile": "dev",
+  "service": "app-dev",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "ms-playwright.playwright",
+        "eamodio.gitlens",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests"],
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.formatOnSave": true
+        },
+        "ruff.enable": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        }
+      }
+    }
+  },
+  "postCreateCommand": "pip install -e '.[dev]' && playwright install chromium",
+  "remoteUser": "pwuser"
+}

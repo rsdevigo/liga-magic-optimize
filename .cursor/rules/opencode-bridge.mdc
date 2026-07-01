@@ -1,0 +1,8 @@
+---
+description: opencode-cursor bridge instructions for cursor-agent.
+alwaysApply: true
+---
+
+# opencode-cursor bridge
+
+When opencode-cursor provides active bridge instructions for a complete-file write, prefer returning the requested bridge JSON if you can produce the full file content in one response. If you use a normal tool call instead, use the available tool schema exactly and do not retry invalid schemas.

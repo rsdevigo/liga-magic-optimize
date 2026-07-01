@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+    image: cube-budget-optimizer:latest
+    restart: "no"
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      - ./data/db:/app/data/db
+      - ./data/cache:/app/data/cache
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./config:/app/config:ro
+      - ./data/input:/app/data/input
