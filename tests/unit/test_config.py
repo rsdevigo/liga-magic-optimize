@@ -14,6 +14,7 @@ class TestConfigLoader:
         assert config.scraper.headless is True
         assert config.scraper.concurrency == 2
         assert config.cache.ttl_hours == 24
+        assert config.optimizer.objective == "stores"
 
     def test_load_missing_returns_defaults(self, tmp_path: Path):
         config = load_config(tmp_path / "nonexistent.yaml")

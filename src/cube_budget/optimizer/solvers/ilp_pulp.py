@@ -126,3 +126,60 @@ class ILPSolver:
             solver_name=self.name,
             optimal=pulp.LpStatus[status] == "Optimal",
         )
+
+    def solve_min_price(self, data: SolverInput) -> SolverOutput:
+        """Minimize total price subject to max_stores if set."""
+        n_cards = len(data.card_ids)
+        n_stores = len(data.store_ids)
+
+        if n_cards == 0:
+            return SolverOutput([], {}, 0.0, 0, self.name, optimal=True)
+
+        prob = pulp.LpProblem("CubeBudget_MinPrice", pulp.LpMinimize)
+
+        y = {j: pulp.LpVariable(f"y_{j}", cat="Binary") for j in range(n_stores)}
+        x = {
+            (i, j): pulp.LpVariable(f"x_{i}_{j}", cat="Binary")
+            for i in range(n_cards)
+            for j in range(n_stores)
+            if data.availability[i][j]
+        }
+
+        prob += pulp.lpSum(data.prices[i][j] * x[(i, j)] for (i, j) in x)
+
+        for i in range(n_cards):
+            available = [j for j in range(n_stores) if data.availability[i][j]]
+            if not available:
+                continue
+            prob += pulp.lpSum(x[(i, j)] for j in available) == 1
+
+        for (i, j) in x:
+            prob += x[(i, j)] <= y[j]
+
+        if data.max_stores:
+            prob += pulp.lpSum(y[j] for j in range(n_stores)) <= data.max_stores
+
+        solver = pulp.PULP_CBC_CMD(msg=0, timeLimit=self._timeout)
+        status = prob.solve(solver)
+
+        if pulp.LpStatus[status] not in ("Optimal", "Not Solved"):
+            raise InfeasibleError("No feasible solution for price minimization")
+
+        selected_stores = [j for j in range(n_stores) if int(pulp.value(y[j]) or 0)]
+        assignments = {}
+        for i in range(n_cards):
+            for j in range(n_stores):
+                if (i, j) in x and int(pulp.value(x[(i, j)]) or 0):
+                    assignments[i] = j
+                    break
+
+        total_price = sum(data.prices[i][j] for i, j in assignments.items())
+
+        return SolverOutput(
+            selected_stores=selected_stores,
+            assignments=assignments,
+            total_price=total_price,
+            stores_count=len(selected_stores),
+            solver_name=f"{self.name}_price",
+            optimal=pulp.LpStatus[status] == "Optimal",
+        )

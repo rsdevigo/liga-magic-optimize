@@ -21,8 +21,8 @@ docker compose build
 # Verificar saúde do sistema
 docker compose run --rm app doctor
 
-# Otimizar uma lista de cartas
-docker compose run --rm app optimize /app/data/input/cube.txt
+# Otimizar uma lista de cartas (caminho relativo ao /app do container)
+docker compose run --rm app optimize data/input/cube.txt
 
 # Ver estatísticas
 docker compose run --rm app stats
@@ -32,6 +32,26 @@ docker compose down --remove-orphans
 ```
 
 Coloque sua lista de cartas em `data/input/cube.txt` (uma carta por linha).
+
+### Git Bash no Windows
+
+O Git Bash converte caminhos que começam com `/` (ex.: `/app/data/...`) para `C:/Program Files/Git/app/...` **antes** de passar o argumento ao Docker. Use uma destas opções:
+
+```bash
+# Opção 1 (recomendada): caminho relativo — o container usa working_dir /app
+docker compose run --rm app optimize data/input/cube.txt
+
+# Opção 2: desativar conversão de caminho
+MSYS_NO_PATHCONV=1 docker compose run --rm app optimize /app/data/input/cube.txt
+
+# Opção 3: barra dupla no início
+docker compose run --rm app optimize //app/data/input/cube.txt
+
+# Ou use make (já usa caminho relativo)
+make optimize
+```
+
+PowerShell e CMD não têm esse problema com `/app/...`.
 
 ## Comandos CLI
 
@@ -48,12 +68,31 @@ Coloque sua lista de cartas em `data/input/cube.txt` (uma carta por linha).
 ### Opções do optimize
 
 ```bash
-docker compose run --rm app optimize /app/data/input/cube.txt \
+docker compose run --rm app optimize data/input/cube.txt \
   --fresh          # Ignora cache
   --resume         # Retoma run interrompido
-  --max-stores 5   # Limite de lojas
-  --solver auto    # auto | greedy | ilp | ortools
+  --objective stores   # Minimizar número de lojas (default)
+  --objective price    # Minimizar preço total
+  --max-stores 4   # Limite máximo de lojas (válido para ambos objetivos)
+  --solver auto    # auto | greedy | ilp | ortools (algoritmo, não objetivo)
   --output-dir /app/reports
+```
+
+**Objetivo vs Solver:**
+- `--objective` define **o que** otimizar: `stores` (menos lojas) ou `price` (menor valor total).
+- `--solver` define **como** calcular: greedy, ILP, OR-Tools ou seleção automática.
+
+Exemplos:
+
+```bash
+# Menor número de lojas, no máximo 3
+docker compose run --rm app optimize data/input/cube.txt --objective stores --max-stores 3
+
+# Menor preço total, sem limite de lojas
+docker compose run --rm app optimize data/input/cube.txt --objective price
+
+# Menor preço usando no máximo 4 lojas
+docker compose run --rm app optimize data/input/cube.txt --objective price --max-stores 4
 ```
 
 ## Testes

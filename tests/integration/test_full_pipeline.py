@@ -47,3 +47,27 @@ class TestFullPipeline:
         result = engine.optimize(inp, str(uuid.uuid4()))
         assert result.stores_used == 1
         assert result.total_price == 5.0
+
+    def test_price_objective_pipeline(self):
+        cards = [
+            Card(id=1, raw_name="A", normalized_name="a"),
+            Card(id=2, raw_name="B", normalized_name="b"),
+        ]
+        stores = [
+            Store(id=1, ligamagic_id="1", name="S1", slug="s1"),
+            Store(id=2, ligamagic_id="2", name="S2", slug="s2"),
+        ]
+        offers = [
+            Offer(card_id=1, store_id=1, price=10.0, quantity=1),
+            Offer(card_id=1, store_id=2, price=3.0, quantity=1),
+            Offer(card_id=2, store_id=1, price=5.0, quantity=1),
+            Offer(card_id=2, store_id=2, price=20.0, quantity=1),
+        ]
+        inp = OptimizationInput(
+            cards=cards, offers=offers, stores=stores, preferred_language="any"
+        )
+        engine = OptimizerEngine(OptimizerConfig(solver="ilp", objective="price"))
+        result = engine.optimize(inp, str(uuid.uuid4()))
+        assert result.objective == "price"
+        assert result.total_price == 8.0
+        assert result.stores_used == 2

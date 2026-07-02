@@ -59,6 +59,7 @@ class Orchestrator:
         fresh: bool = False,
         resume: bool = False,
         max_stores: int | None = None,
+        objective: str | None = None,
         solver: str | None = None,
         output_dir: str | Path | None = None,
     ) -> OptimizationResult:
@@ -98,6 +99,9 @@ class Orchestrator:
 
             if stale:
                 self._scrape_cards(stale)
+
+            if objective:
+                self._config.optimizer.objective = objective  # type: ignore
 
             # Build optimization input
             opt_input = self._build_optimization_input(persisted, max_stores, solver)

@@ -11,6 +11,9 @@ SOLVER_GREEDY = "greedy"
 SOLVER_ILP = "ilp"
 SOLVER_ORTOOLS = "ortools"
 
+OBJECTIVE_STORES = "stores"
+OBJECTIVE_PRICE = "price"
+
 CACHE_STATUS_OK = "ok"
 CACHE_STATUS_ERROR = "error"
 CACHE_STATUS_PARTIAL = "partial"

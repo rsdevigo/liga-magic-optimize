@@ -39,6 +39,7 @@ class FiltersConfig(BaseModel):
 
 class OptimizerConfig(BaseModel):
     solver: Literal["auto", "greedy", "ilp", "ortools"] = "auto"
+    objective: Literal["stores", "price"] = "stores"
     ilp_timeout_s: int = 120
     ortools_timeout_s: int = 300
     ilp_ortools_threshold: int = 15000

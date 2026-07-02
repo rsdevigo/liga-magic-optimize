@@ -92,6 +92,8 @@ class OptimizationResult(BaseModel):
     stores_used: int = 0
     total_price: float = 0.0
     solver: str = "unknown"
+    objective: str = "stores"
+    max_stores_limit: int | None = None
     duration_ms: int = 0
     total_cards: int = 0
     found_cards: int = 0
@@ -138,3 +140,4 @@ class OptimizationRunRecord(BaseModel):
 
 
 SolverType = Literal["auto", "greedy", "ilp", "ortools"]
+OptimizationObjective = Literal["stores", "price"]

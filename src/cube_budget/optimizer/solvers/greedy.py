@@ -113,3 +113,39 @@ class GreedySolver:
             if price < math.inf:
                 total += price
         return total
+
+    def solve_min_price(self, data: SolverInput) -> SolverOutput:
+        """Assign each card to cheapest store; optionally cap store count via max_stores."""
+        n_cards = len(data.card_ids)
+        if n_cards == 0:
+            return SolverOutput([], {}, 0.0, 0, self.name, optimal=True)
+
+        if data.max_stores is not None:
+            store_result = self.solve(data)
+            if store_result.stores_count > data.max_stores:
+                selected = set(store_result.selected_stores[: data.max_stores])
+                return self.solve_phase2(data, selected, data.max_stores)
+            return self.solve_phase2(data, set(store_result.selected_stores), data.max_stores)
+
+        assignments: dict[int, int] = {}
+        used_stores: set[int] = set()
+        for i in range(n_cards):
+            best_store = -1
+            best_price = math.inf
+            for j in range(len(data.store_ids)):
+                if data.availability[i][j] and data.prices[i][j] < best_price:
+                    best_price = data.prices[i][j]
+                    best_store = j
+            if best_store >= 0:
+                assignments[i] = best_store
+                used_stores.add(best_store)
+
+        total_price = self._compute_price(data, assignments)
+        return SolverOutput(
+            selected_stores=list(used_stores),
+            assignments=assignments,
+            total_price=total_price,
+            stores_count=len(used_stores),
+            solver_name=f"{self.name}_price",
+            optimal=False,
+        )

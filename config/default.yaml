@@ -24,6 +24,7 @@ filters:
 
 optimizer:
   solver: auto
+  objective: stores
   ilp_timeout_s: 120
   ortools_timeout_s: 300
   ilp_ortools_threshold: 15000

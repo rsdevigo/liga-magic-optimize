@@ -55,6 +55,11 @@ class ExcelReporter:
         ws.title = "Resumo"
         rows = [
             ("Métrica", "Valor"),
+            ("Objetivo", result.objective),
+            (
+                "Limite de lojas",
+                str(result.max_stores_limit) if result.max_stores_limit is not None else "sem limite",
+            ),
             ("Total de cartas", result.total_cards),
             ("Cartas encontradas", f"{result.found_cards} ({stats['found_pct']:.1f}%)"),
             ("Cartas não encontradas", len(result.missing)),

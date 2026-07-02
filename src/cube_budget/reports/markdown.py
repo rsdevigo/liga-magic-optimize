@@ -31,6 +31,8 @@ class MarkdownReporter:
             "| Métrica | Valor |",
             "|---------|-------|",
             f"| Total de cartas | {result.total_cards} |",
+            f"| Objetivo | {result.objective} |",
+            f"| Limite de lojas | {result.max_stores_limit if result.max_stores_limit is not None else 'sem limite'} |",
             f"| Cartas encontradas | {result.found_cards} ({stats['found_pct']:.1f}%) |",
             f"| Cartas não encontradas | {len(result.missing)} |",
             f"| Lojas necessárias | {result.stores_used} |",
@@ -59,9 +61,12 @@ class MarkdownReporter:
                 lines.append(f"- {m.raw_name} ({m.reason})")
             lines.append("")
 
+        max_stores_label = stats.get("max_stores_limit", "sem limite")
         lines.extend([
             "## Notas",
             "",
+            f"- Objetivo: {result.objective}",
+            f"- Limite de lojas: {max_stores_label}",
             f"- Algoritmo: {result.solver}",
             f"- Greedy benchmark: {result.greedy_stores} lojas, "
             f"R$ {result.greedy_price or 0:,.2f}",

@@ -7,7 +7,14 @@ import time
 from loguru import logger
 
 from cube_budget.config.schema import OptimizerConfig
-from cube_budget.core.constants import SOLVER_AUTO, SOLVER_GREEDY, SOLVER_ILP, SOLVER_ORTOOLS
+from cube_budget.core.constants import (
+    OBJECTIVE_PRICE,
+    OBJECTIVE_STORES,
+    SOLVER_AUTO,
+    SOLVER_GREEDY,
+    SOLVER_ILP,
+    SOLVER_ORTOOLS,
+)
 from cube_budget.core.exceptions import InfeasibleError, OptimizerError
 from cube_budget.core.models import (
     AssignedCard,
@@ -26,7 +33,7 @@ from cube_budget.optimizer.solvers.ortools_cpsat import ORToolsSolver
 
 
 class OptimizerEngine:
-    """Hybrid 3-stage optimization pipeline."""
+    """Hybrid optimization pipeline with configurable objective."""
 
     def __init__(self, config: OptimizerConfig):
         self._config = config
@@ -46,22 +53,23 @@ class OptimizerEngine:
         uncovered = self._matrix_builder.get_uncovered_cards(solver_data)
 
         n_vars = len(solver_data.card_ids) * len(solver_data.store_ids)
+        objective = self._config.objective
         logger.info(
             f"Optimizing {len(solver_data.card_ids)} cards x "
-            f"{len(solver_data.store_ids)} stores ({n_vars} vars)"
+            f"{len(solver_data.store_ids)} stores ({n_vars} vars), objective={objective}"
         )
 
-        # Stage 1: Greedy warm-start
         greedy_result = self._greedy.solve(solver_data)
         logger.info(
             f"Greedy: {greedy_result.stores_count} stores, "
             f"R$ {greedy_result.total_price:.2f}"
         )
 
-        # Stage 2: Exact solver
-        solver_output = self._select_and_solve(solver_data, n_vars, greedy_result)
+        if objective == OBJECTIVE_PRICE:
+            solver_output = self._select_and_solve_price(solver_data, n_vars, greedy_result)
+        else:
+            solver_output = self._select_and_solve_stores(solver_data, n_vars, greedy_result)
 
-        # Build result
         result = self._build_result(
             opt_input,
             solver_data,
@@ -70,11 +78,12 @@ class OptimizerEngine:
             run_uuid,
             greedy_result,
             int((time.time() - start) * 1000),
+            objective=objective,
         )
 
         return result
 
-    def _select_and_solve(
+    def _select_and_solve_stores(
         self,
         data: SolverInput,
         n_vars: int,
@@ -99,7 +108,6 @@ class OptimizerEngine:
                 logger.warning(f"OR-Tools failed: {e}. Using greedy fallback.")
                 return greedy_result
 
-        # Auto selection
         if n_vars < self._config.ilp_ortools_threshold:
             try:
                 result = self._ilp.solve(data)
@@ -118,6 +126,45 @@ class OptimizerEngine:
 
         return greedy_result
 
+    def _select_and_solve_price(
+        self,
+        data: SolverInput,
+        n_vars: int,
+        greedy_result: SolverOutput,
+    ) -> SolverOutput:
+        solver_choice = self._config.solver
+        price_greedy = self._greedy.solve_min_price(data)
+
+        if solver_choice == SOLVER_GREEDY:
+            return price_greedy
+
+        if solver_choice == SOLVER_ILP:
+            try:
+                return self._ilp.solve_min_price(data)
+            except (InfeasibleError, OptimizerError) as e:
+                logger.warning(f"ILP price failed: {e}. Using greedy fallback.")
+                return price_greedy
+
+        if solver_choice == SOLVER_ORTOOLS:
+            try:
+                return self._ortools.solve_min_price(data)
+            except (InfeasibleError, OptimizerError) as e:
+                logger.warning(f"OR-Tools price failed: {e}. Using greedy fallback.")
+                return price_greedy
+
+        if n_vars < self._config.ilp_ortools_threshold:
+            try:
+                return self._ilp.solve_min_price(data)
+            except (InfeasibleError, OptimizerError) as e:
+                logger.warning(f"ILP price failed: {e}")
+
+        try:
+            return self._ortools.solve_min_price(data)
+        except (InfeasibleError, OptimizerError) as e:
+            logger.warning(f"OR-Tools price failed: {e}")
+
+        return price_greedy
+
     def _build_result(
         self,
         opt_input: OptimizationInput,
@@ -127,11 +174,11 @@ class OptimizerEngine:
         run_uuid: str,
         greedy_result: SolverOutput,
         duration_ms: int,
+        objective: str = OBJECTIVE_STORES,
     ) -> OptimizationResult:
         card_map = {c.id: c for c in opt_input.cards if c.id}
         store_map = {s.id: s for s in opt_input.stores if s.id}
 
-        # Build offer lookup: (card_id, store_id) -> best offer
         offer_lookup: dict[tuple[int, int], Offer] = {}
         for offer in opt_input.offers:
             key = (offer.card_id, offer.store_id)
@@ -166,6 +213,8 @@ class OptimizerEngine:
             stores_used=output.stores_count,
             total_price=output.total_price,
             solver=output.solver_name,
+            objective=objective,
+            max_stores_limit=opt_input.max_stores,
             duration_ms=duration_ms,
             total_cards=len(opt_input.cards),
             found_cards=len(assignments),

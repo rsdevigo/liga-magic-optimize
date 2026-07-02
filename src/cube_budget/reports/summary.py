@@ -30,6 +30,12 @@ class SummaryStats:
         if result.greedy_price and result.total_price:
             savings = result.greedy_price - result.total_price
 
+        max_stores_label = (
+            str(result.max_stores_limit)
+            if result.max_stores_limit is not None
+            else "sem limite"
+        )
+
         return {
             "total_cards": result.total_cards,
             "found_cards": result.found_cards,
@@ -40,6 +46,8 @@ class SummaryStats:
             "avg_price": avg_price,
             "max_price": max_price,
             "min_price": min_price,
+            "objective": result.objective,
+            "max_stores_limit": max_stores_label,
             "solver": result.solver,
             "duration_ms": result.duration_ms,
             "greedy_stores": result.greedy_stores,

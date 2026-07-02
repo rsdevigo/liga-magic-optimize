@@ -16,7 +16,14 @@ def print_summary(result: OptimizationResult) -> None:
     """Print executive summary panel."""
     stats = SummaryStats.compute(result)
 
+    objective_label = "Menor número de lojas" if result.objective == "stores" else "Menor preço total"
+    max_stores_label = (
+        str(result.max_stores_limit) if result.max_stores_limit is not None else "sem limite"
+    )
+
     content = (
+        f"[bold]Objetivo:[/bold] {objective_label} ({result.objective})\n"
+        f"[bold]Limite de lojas:[/bold] {max_stores_label}\n"
         f"[bold]Total cartas processadas:[/bold] {result.total_cards}\n"
         f"[bold]Cartas encontradas:[/bold] {result.found_cards} ({stats['found_pct']:.1f}%)\n"
         f"[bold]Cartas não encontradas:[/bold] {len(result.missing)}\n"
